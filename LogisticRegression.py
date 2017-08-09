@@ -37,7 +37,7 @@ class LogisticRegressionCostFunction:
         return (model_response - training_response) * input
 
 class RPROP:
-    def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1):
+    def __init__(self, model_to_train, cost_function, epoch = 110, default_step_size = 0.1):
         self.min_step_size = 1 * exp(-6)
         self.max_step_size = 50
         self.default_step_size = default_step_size
@@ -53,6 +53,7 @@ class RPROP:
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
         for iteration in range(self.epoch):
+            print("Starting epoch:", iteration + 1)
             for weight_index in range(len(network_weights)):
                 weight_gradients_on_current_iteration[weight_index] = self.cost_function.get_derivative_of_cost_function(training_set, weight_index)
 

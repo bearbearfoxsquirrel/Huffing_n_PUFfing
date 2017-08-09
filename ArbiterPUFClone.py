@@ -1,5 +1,5 @@
 from LogisticRegression import LogisticRegressionModel, RPROP, LogisticRegressionCostFunction
-from cma import CMAEvolutionStrategy
+
 class ArbiterPUFClone:
     def __init__(self, machine_learning_model, training_set, training_iterations, arbiter_challenge_bit_length):
         self.challenge_bit_length = arbiter_challenge_bit_length
