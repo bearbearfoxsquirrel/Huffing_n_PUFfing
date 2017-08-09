@@ -30,14 +30,14 @@ def save_training_set_to_json(training_set, output_file):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 64
+    puf_challenge_bit_length = 8
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics, puf_challenge_bit_length)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 500)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 1500)
     save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF

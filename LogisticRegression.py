@@ -18,7 +18,7 @@ class LogisticRegressionModel:
         return probability
 
     def train_probability_vector(self, training_set, iterations_for_training, model_trainer):
-        return model_trainer.train_model(self.probability_vector, training_set, 500)
+        return model_trainer.train_model(self.probability_vector, training_set)
 
 class LogisticRegressionCostFunction:
     def __init__(self, logisitic_regression_model):
@@ -37,7 +37,7 @@ class LogisticRegressionCostFunction:
         return (model_response - training_response) * input
 
 class RPROP:
-    def __init__(self, model_to_train, cost_function, default_step_size = 0.1):
+    def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1):
         self.min_step_size = 1 * exp(-6)
         self.max_step_size = 50
         self.default_step_size = default_step_size
@@ -45,14 +45,15 @@ class RPROP:
         self.step_size_decrease_factor = 0.5
         self.model_to_train = model_to_train
         self.cost_function = cost_function
+        self.epoch = epoch
 
     #TODO get back and do this thing
-    def train_model(self, network_weights, training_set, iterations_for_training):
+    def train_model(self, network_weights, training_set):
         current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
-        for iteration in range(iterations_for_training):
+        for iteration in range(self.epoch):
             for weight_index in range(len(network_weights)):
                 weight_gradients_on_current_iteration[weight_index] = self.cost_function.get_derivative_of_cost_function(training_set, weight_index)
 
