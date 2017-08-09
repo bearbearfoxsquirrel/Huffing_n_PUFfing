@@ -9,7 +9,6 @@ from LogisticRegression import LogisticRegressionModel
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
     # 4 delays for each stage to represent p, q, r & s del
-    # TODO not use bad range
     return [[random.randint(10, 1000) for delay in range(4)] for challenge_stage in range(number_of_challenges)]
 
 def generate_random_puf_challenge(puf_challenge_bit_length):
@@ -31,18 +30,18 @@ def save_training_set_to_json(training_set, output_file):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 128
+    puf_challenge_bit_length = 64
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics, puf_challenge_bit_length)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 1000)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 500)
     save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
-    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [0.5 for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 20, original_puf.challenge_bits)
+    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [0.5 for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 1000, original_puf.challenge_bits)
 
     #testing the clone to ensure it has the same output as the original puf
     number_of_tests = 1000

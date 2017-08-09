@@ -1,11 +1,11 @@
-from LogisticRegression import LogisticRegressionModel, RPROP
-
+from LogisticRegression import LogisticRegressionModel, RPROP, LogisticRegressionCostFunction
+from cma import CMAEvolutionStrategy
 class ArbiterPUFClone:
     def __init__(self, machine_learning_model, training_set, training_iterations, arbiter_challenge_bit_length):
         self.challenge_bit_length = arbiter_challenge_bit_length
         self.machine_learning_model = machine_learning_model
 
-        self.model_trainer = RPROP(self.machine_learning_model)
+        self.model_trainer = RPROP(self.machine_learning_model, LogisticRegressionCostFunction(self.machine_learning_model))
         self.machine_learning_model.probability_vector = self.machine_learning_model.train_probability_vector(training_set, training_iterations, self.model_trainer)
         #Random weight given, as I'm not exactly sure what else to use
 
@@ -20,5 +20,3 @@ class PUFClassifier:
 
     def get_classification_from_probability(self, probability_of_output):
         return 1 if probability_of_output >= self.decision_boundary else -1
-
-
