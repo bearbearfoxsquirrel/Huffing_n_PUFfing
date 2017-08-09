@@ -5,7 +5,7 @@ from math import e, exp
 
 
 class LogisticRegressionModel:
-    def __init__(self, classifier, probability_vector, constant_bias = 0): #TODO: Need to check about initial probability vector
+    def __init__(self, classifier, probability_vector, constant_bias = 0):
         self.probability_vector = probability_vector
         self.constant_bias = constant_bias
         self.classifier = classifier
@@ -18,7 +18,7 @@ class LogisticRegressionModel:
         return probability
 
     def train_probability_vector(self, training_set, iterations_for_training, model_trainer):
-        return model_trainer.train_model(self.probability_vector, training_set)
+        return model_trainer.train_model_irprop_minus(self.probability_vector, training_set)
 
 class LogisticRegressionCostFunction:
     def __init__(self, logisitic_regression_model):
@@ -47,8 +47,7 @@ class RPROP:
         self.cost_function = cost_function
         self.epoch = epoch
 
-    #TODO get back and do this thing
-    def train_model(self, network_weights, training_set):
+    def train_model_irprop_minus(self, network_weights, training_set):
         current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
