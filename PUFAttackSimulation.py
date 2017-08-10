@@ -1,7 +1,6 @@
 from ArbiterPUF import ArbiterPUF
 from ArbiterPUFClone import ArbiterPUFClone, PUFClassifier
 from CRP import CRP
-import random
 import json
 from pandas import DataFrame
 from LogisticRegression import LogisticRegressionModel
@@ -39,7 +38,6 @@ def get_test_results_of_puf_clone_against_original(clone_puf, original_puf, test
 
 def print_ml_accuracy(number_of_tests, tests_passed):
     print(tests_passed / number_of_tests, ' tests passed')
-
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)

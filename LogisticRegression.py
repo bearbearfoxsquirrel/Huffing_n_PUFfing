@@ -40,7 +40,7 @@ class LogisticRegressionCostFunction:
 
 
 class RPROP:
-    def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1):
+    def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1, error_tolerance_threshold = 5.0):
         self.min_step_size = 1 * exp(-6)
         self.max_step_size = 50
         self.default_step_size = default_step_size
@@ -49,6 +49,7 @@ class RPROP:
         self.model_to_train = model_to_train
         self.cost_function = cost_function
         self.epoch = epoch
+        self.error_tolerance_threshold = error_tolerance_threshold
 
     def train_model_irprop_minus(self, network_weights, training_set):
         current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
@@ -77,14 +78,12 @@ class RPROP:
     def get_model_response(self, inputs):
         return self.model_to_train.get_output_probability(inputs)
 
-    def get_weight_cost_function(self, network_response, training_response):
-        return training_response * log(network_response) + ((1 - training_response) * log(1 - network_response))
-
     def update_weight_with_step_size(self, weight, weight_gradient, update_step_size):
         return weight - sign(weight_gradient) * update_step_size
 
     def is_model_okie(self, testing_set):
         pass
+        #TODO test to see if weights keep to a certain accuracy threshold
 
 '''
 class GradientDescent:
