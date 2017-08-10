@@ -28,9 +28,22 @@ def save_training_set_to_json(training_set, output_file):
     with open(output_file, 'w') as output_file:
         json.dump([training_example.__dict__ for training_example in training_set], output_file, indent=4)
 
+def get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests):
+    tests_passed = 0
+    for test in tests:
+        original_puf_response = original_puf.get_response(test)
+        clone_puf_response = clone_puf.get_response(test)
+        if clone_puf_response == original_puf_response:
+            tests_passed += 1
+    return tests_passed
+
+def print_ml_accuracy(number_of_tests, tests_passed):
+    print(tests_passed / number_of_tests, ' tests passed')
+
+
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 8
+    puf_challenge_bit_length = 32
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics, puf_challenge_bit_length)
@@ -41,23 +54,13 @@ def puf_attack_sim():
     save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
-    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [0.5 for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 1000, original_puf.challenge_bits)
+    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [0.5 for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 5000
+                                , original_puf.challenge_bits)
 
     #testing the clone to ensure it has the same output as the original puf
-    number_of_tests = 1000
-    tests = [generate_random_puf_challenge(original_puf.challenge_bits) for test in range(number_of_tests)]
-    passed_all_tests = True
-    tests_passed = 0
-
-    for test in tests:
-        original_puf_response = original_puf.get_response(test)
-        if original_puf_response != clone_puf.get_response(test):
-            passed_all_tests = False
-        else:
-            tests_passed += 1
-
-    print(':)') if passed_all_tests else print(':(')
-    print(tests_passed, ' tests passed')
+    number_of_tests = 10000
+    tests_for_puf = [generate_random_puf_challenge(original_puf.challenge_bits) for test in range(number_of_tests)]
+    print_ml_accuracy(number_of_tests, get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests_for_puf))
 
 if __name__ == '__main__':
     puf_attack_sim()

@@ -1,8 +1,7 @@
 from CRP import CRP
 from numpy.ma import dot
-from numpy import sign, log, float64, float_power
+from numpy import  sign, log, float_power
 from math import e, exp
-
 
 class LogisticRegressionModel:
     def __init__(self, classifier, probability_vector, constant_bias = 0):
@@ -12,7 +11,7 @@ class LogisticRegressionModel:
 
     def get_output_probability(self, input_vector):
         assert len(input_vector) == len(self.probability_vector)
-        sigmoid = lambda input: float64(1 / (1 + float_power(e, input)))
+        sigmoid = lambda input: 1 / (1 + float_power(e, input))
         dot_product = dot(input_vector, self.probability_vector)
         probability = sigmoid(dot_product)
         return probability
@@ -34,7 +33,11 @@ class LogisticRegressionCostFunction:
                     for training_example in training_examples])
 
     def get_squared_error(self, training_response, model_response, input):
+        if model_response == -1: model_response = 0
+        if training_response == -1: training_response = 0
+        if input == -1: input = 0
         return (model_response - training_response) * input
+
 
 class RPROP:
     def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1):
@@ -53,6 +56,7 @@ class RPROP:
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
         for iteration in range(self.epoch):
+            print("Starting epoch", iteration)
             for weight_index in range(len(network_weights)):
                 weight_gradients_on_current_iteration[weight_index] = self.cost_function.get_derivative_of_cost_function(training_set, weight_index)
 
