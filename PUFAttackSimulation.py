@@ -37,11 +37,11 @@ def get_test_results_of_puf_clone_against_original(clone_puf, original_puf, test
     return tests_passed
 
 def print_ml_accuracy(number_of_tests, tests_passed):
-    print(tests_passed / number_of_tests, ' tests passed')
+    print((tests_passed / number_of_tests) * 100, '% accuracy on tests')
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 32
+    puf_challenge_bit_length = 64
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics, puf_challenge_bit_length)
@@ -52,7 +52,7 @@ def puf_attack_sim():
     save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
-    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [random.random() for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 5000
+    clone_puf = ArbiterPUFClone(LogisticRegressionModel(PUFClassifier(), [random.random() for weight in range(puf_challenge_bit_length)]), puf_clone_training_set, 20000
                                 , original_puf.challenge_bits)
 
     #testing the clone to ensure it has the same output as the original puf
