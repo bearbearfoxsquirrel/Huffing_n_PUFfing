@@ -52,8 +52,7 @@ def puf_attack_sim():
     save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
-    clone_puf = ArbiterPUFClone(LogisticRegressionModel([random.random() for weight in range(puf_challenge_bit_length)]), PUFClassifier(), puf_clone_training_set, 1000
-                                , original_puf.challenge_bits)
+    clone_puf = ArbiterPUFClone(LogisticRegressionModel([random.random() for weight in range(puf_challenge_bit_length)]), PUFClassifier(), puf_clone_training_set, 1000)
 
     #testing the clone to ensure it has the same output as the original puf
     number_of_tests = 10000

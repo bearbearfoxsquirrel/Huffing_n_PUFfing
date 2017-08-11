@@ -19,8 +19,8 @@ class LogisticRegressionModel:
         return model_trainer.train_model_irprop_minus(self.probability_vector, training_set)
 
 class LogisticRegressionCostFunction:
-    def __init__(self, logisitic_regression_model):
-        self.logistic_regression_model = logisitic_regression_model
+    def __init__(self, logistic_regression_model):
+        self.logistic_regression_model = logistic_regression_model
 
     def get_derivative_of_cost_function(self, training_examples, weight_index):
         return -(1 / len(training_examples))  * self.get_sum_of_squared_errors(training_examples, weight_index)
@@ -32,9 +32,6 @@ class LogisticRegressionCostFunction:
                     for training_example in training_examples])
 
     def get_squared_error(self, training_response, model_response, input):
-        if model_response == -1: model_response = 0
-        if training_response == -1: training_response = 0
-        if input == -1: input = 0
         return (model_response - training_response) * input
 
 
