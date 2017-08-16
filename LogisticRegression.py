@@ -9,21 +9,18 @@ class LogisticRegressionModel:
         self.constant_bias = constant_bias
 
     def get_output_probability(self, input_vector):
-        assert len(input_vector) == len(self.probability_vector)
+        #assert len(input_vector) == len(self.probability_vector)
         sigmoid = lambda input: 1 / (1 + float_power(e, input))
         dot_product_of_input_and_probability = dot(input_vector, self.probability_vector)
         probability = sigmoid(dot_product_of_input_and_probability)
         return probability
-
-    def train_probability_vector(self, training_set, iterations_for_training, model_trainer):
-        return model_trainer.train_model_irprop_minus(self.probability_vector, training_set)
 
 class LogisticRegressionCostFunction:
     def __init__(self, logistic_regression_model):
         self.logistic_regression_model = logistic_regression_model
 
     def get_derivative_of_cost_function(self, training_examples, weight_index):
-        return -(1 / len(training_examples))  * self.get_sum_of_squared_errors(training_examples, weight_index)
+        return -(1 / len(training_examples)) * self.get_sum_of_squared_errors(training_examples, weight_index)
 
     def get_sum_of_squared_errors(self, training_examples, weight_index):
         return sum([self.get_squared_error(training_example.response,
@@ -36,18 +33,16 @@ class LogisticRegressionCostFunction:
 
 
 class RPROP:
-    def __init__(self, model_to_train, cost_function, epoch = 300, default_step_size = 0.1, error_tolerance_threshold = 5.0):
+    def __init__(self, epoch = 300, default_step_size = 0.1, error_tolerance_threshold = 5.0):
         self.min_step_size = 1 * exp(-6)
         self.max_step_size = 50
         self.default_step_size = default_step_size
         self.step_size_increase_factor = 1.2
         self.step_size_decrease_factor = 0.5
-        self.model_to_train = model_to_train
-        self.cost_function = cost_function
         self.epoch = epoch
         self.error_tolerance_threshold = error_tolerance_threshold
 
-    def train_model_irprop_minus(self, network_weights, training_set):
+    def train_model_irprop_minus(self, model_to_train, cost_function, network_weights, training_set):
         current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
@@ -55,7 +50,7 @@ class RPROP:
         for iteration in range(self.epoch):
             print("Starting epoch", iteration)
             for weight_index in range(len(network_weights)):
-                weight_gradients_on_current_iteration[weight_index] = self.cost_function.get_derivative_of_cost_function(training_set, weight_index)
+                weight_gradients_on_current_iteration[weight_index] = cost_function.get_derivative_of_cost_function(training_set, weight_index)
 
                 gradient_product = weight_gradients_on_current_iteration[weight_index] * weight_gradients_on_previous_iteration[weight_index]
                 if gradient_product > 0:
@@ -71,8 +66,8 @@ class RPROP:
         print(network_weights)
         return network_weights
 
-    def get_model_response(self, inputs):
-        return self.model_to_train.get_output_probability(inputs)
+    def get_model_response(self, model_to_train, inputs):
+        return model_to_train.get_output_probability(inputs)
 
     def update_weight_with_step_size(self, weight, weight_gradient, update_step_size):
         return weight - sign(weight_gradient) * update_step_size

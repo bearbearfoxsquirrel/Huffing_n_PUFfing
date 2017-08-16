@@ -9,6 +9,7 @@ class ArbiterPUF:
     def __init__(self, input_vector, challenge_bits):
         self.puf_delay_parameters = input_vector #2D Vector to represent variances in circuit, defined with: p, r, s, q
         self.challenge_bits = challenge_bits #Number of stages that can be configured for a given challenge in the circuit
+        self.delay_vector = self.calculate_delay_vector()
 
     def get_response(self, challenge_configuration):
         # Challenge_configuration refers to the vector representing a binary input of chosen path for the electrical signal
@@ -17,9 +18,9 @@ class ArbiterPUF:
 
     def get_total_delay_vector_from_challenge(self, challenge_configuration):
         # Delta between top and bottom can be represented as the dot multiplication of the input vector and challenge configuration
-        return dot(self.get_delay_vector(), challenge_configuration)
+        return dot(self.delay_vector, challenge_configuration)
 
-    def get_delay_vector(self):
+    def calculate_delay_vector(self):
         delay_vector = [self.get_alpha(0)]
         # For all challenge bits except for the first and last bits
         for stage_number, stage in enumerate(self.puf_delay_parameters[1 : self.challenge_bits - 1]):

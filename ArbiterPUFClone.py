@@ -1,13 +1,12 @@
 from LogisticRegression import LogisticRegressionModel, RPROP, LogisticRegressionCostFunction
 
 class ArbiterPUFClone:
-    def __init__(self, machine_learning_model, puf_classifier, training_set, training_iterations):
+    def __init__(self, machine_learning_model, cost_function, puf_classifier, training_set):
         self.machine_learning_model = machine_learning_model
         self.puf_probability_classifier = puf_classifier
-        self.model_trainer = RPROP(self.machine_learning_model, LogisticRegressionCostFunction(self.machine_learning_model))
-
+        self.model_trainer = RPROP()
         training_set = self.prepare_training_set_for_lr_training(training_set)
-        self.machine_learning_model.probability_vector = self.machine_learning_model.train_probability_vector(training_set, training_iterations, self.model_trainer)
+        self.machine_learning_model.probability_vector = self.model_trainer.train_model_irprop_minus(self.machine_learning_model, cost_function, self.machine_learning_model.probability_vector,training_set)
 
     def get_response(self, challenge):
         probability_of_response_being_one = self.machine_learning_model.get_output_probability(challenge)
