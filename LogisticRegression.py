@@ -1,6 +1,6 @@
 from CRP import CRP
 from numpy.ma import dot
-from numpy import  sign, log, float_power
+from numpy import  sign, float_power
 from math import e, exp
 
 class LogisticRegressionModel:

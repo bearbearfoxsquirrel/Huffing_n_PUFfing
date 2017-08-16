@@ -7,7 +7,7 @@ from LogisticRegression import LogisticRegressionModel
 import random
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
-    # 4 delays for each stage to represent p, q, r & s del
+    # 4 delays for each stage to represent p, q, r & s delay
     return [[random.randint(10, 1000) for delay in range(4)] for challenge_stage in range(number_of_challenges)]
 
 def generate_random_puf_challenge(puf_challenge_bit_length):
@@ -20,7 +20,7 @@ def create_puf_clone_training_set(puf_to_generate_crps_from, training_set_size):
         training_set.append(CRP(random_challenge, puf_to_generate_crps_from.get_response(random_challenge)))
     return training_set
 
-def is_clone_response_match_original(original_response, clone_response):
+def does_clone_response_match_original(original_response, clone_response):
     return original_response == clone_response
 
 def save_training_set_to_json(training_set, output_file):
@@ -49,7 +49,7 @@ def puf_attack_sim():
 
     #create a training set of CRPs for the clone to train on
     puf_clone_training_set = create_puf_clone_training_set(original_puf, 20000)
-    save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
+    #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
     number_of_crps_for_training = 20000

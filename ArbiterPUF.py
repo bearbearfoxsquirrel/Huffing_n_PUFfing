@@ -20,12 +20,12 @@ class ArbiterPUF:
         return dot(self.get_delay_vector(), challenge_configuration)
 
     def get_delay_vector(self):
-        p_vector = [self.get_alpha(0)]
+        delay_vector = [self.get_alpha(0)]
         # For all challenge bits except for the first and last bits
         for stage_number, stage in enumerate(self.puf_delay_parameters[1 : self.challenge_bits - 1]):
-            p_vector.append(self.get_alpha(stage_number) + self.get_beta(stage_number - 1))
-        p_vector.append(self.get_beta(self.challenge_bits - 1))
-        return p_vector
+            delay_vector.append(self.get_alpha(stage_number) + self.get_beta(stage_number - 1))
+        delay_vector.append(self.get_beta(self.challenge_bits - 1))
+        return delay_vector
 
     def get_alpha(self, stage_number):
         return (self.get_challenge_stage_delay(stage_number, 0) - self.get_challenge_stage_delay(stage_number,3)
