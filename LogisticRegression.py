@@ -48,9 +48,8 @@ class RPROP:
         weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
-
+        pool = Pool(processes=len(network_weights))
         for iteration in range(self.epoch):
-            pool = Pool()
             print('Starting epoch', iteration)
             network_weights = pool.starmap(self.update_weight_for_current_epoch,
                                                        [(network_weights[weight_index],

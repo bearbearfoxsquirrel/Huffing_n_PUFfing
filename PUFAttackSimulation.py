@@ -5,7 +5,7 @@ import json
 from pandas import DataFrame
 from LogisticRegression import LogisticRegressionModel, LogisticRegressionCostFunction
 import random
-
+from multiprocessing import Pool
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
     # 4 delays for each stage to represent p, q, r & s delay
@@ -42,14 +42,14 @@ def print_ml_accuracy(number_of_tests, tests_passed):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 128
+    puf_challenge_bit_length = 8
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 2000)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 500)
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
@@ -59,7 +59,8 @@ def puf_attack_sim():
 
     #testing the clone to ensure it has the same output as the original puf
     number_of_tests = 100000
-    tests_for_puf = [generate_random_puf_challenge(original_puf.challenge_bits) for test in range(number_of_tests)]
+    pool = Pool()
+    tests_for_puf = pool.map(generate_random_puf_challenge, [(original_puf.challenge_bits) for length in range(number_of_tests)])
     print_ml_accuracy(number_of_tests, get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests_for_puf))
 
 if __name__ == '__main__':
