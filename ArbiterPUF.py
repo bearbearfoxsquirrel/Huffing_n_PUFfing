@@ -6,9 +6,9 @@ class ArbiterPUF:
     This model of an Arbiter PUF is based off the Arbiter Model presented in
     Extracting Secret Keys from Integrated Circuits by Daihyun Lim
     '''
-    def __init__(self, input_vector, challenge_bits):
+    def __init__(self, input_vector):
         self.puf_delay_parameters = input_vector #2D Vector to represent variances in circuit, defined with: p, r, s, q
-        self.challenge_bits = challenge_bits #Number of stages that can be configured for a given challenge in the circuit
+        self.challenge_bits = len(self.puf_delay_parameters) #Number of stages that can be configured for a given challenge in the circuit
         self.delay_vector = self.calculate_delay_vector()
 
     def get_response(self, challenge_configuration):

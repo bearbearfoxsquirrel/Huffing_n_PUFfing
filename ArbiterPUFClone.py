@@ -6,7 +6,7 @@ class ArbiterPUFClone:
         self.puf_probability_classifier = puf_classifier
         self.model_trainer = RPROP()
         training_set = self.prepare_training_set_for_lr_training(training_set)
-        self.machine_learning_model.probability_vector = self.model_trainer.train_model_irprop_minus(self.machine_learning_model, cost_function, self.machine_learning_model.probability_vector,training_set)
+        self.machine_learning_model.probability_vector = self.model_trainer.train_model_irprop_minus(self.machine_learning_model, cost_function, self.machine_learning_model.probability_vector, training_set)
 
     def get_response(self, challenge):
         probability_of_response_being_one = self.machine_learning_model.get_output_probability(challenge)

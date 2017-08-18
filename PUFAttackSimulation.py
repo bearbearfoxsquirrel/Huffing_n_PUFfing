@@ -42,10 +42,10 @@ def print_ml_accuracy(number_of_tests, tests_passed):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 8
+    puf_challenge_bit_length = 128
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
-    original_puf = ArbiterPUF(random_physical_characteristics, puf_challenge_bit_length)
+    original_puf = ArbiterPUF(random_physical_characteristics)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
@@ -53,7 +53,6 @@ def puf_attack_sim():
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
-   # number_of_crps_for_training = 20000
     initial_probability_vector = [random.random() for weight in range(puf_challenge_bit_length)]
     logistic_regression_model = LogisticRegressionModel(initial_probability_vector)
     clone_puf = ArbiterPUFClone(logistic_regression_model, LogisticRegressionCostFunction(logistic_regression_model), PUFClassifier(), puf_clone_training_set)

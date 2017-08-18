@@ -1,4 +1,5 @@
 from CRP import CRP
+from multiprocessing import Pool, Process
 from numpy.ma import dot
 from numpy import  sign, float_power
 from math import e, exp
@@ -47,24 +48,32 @@ class RPROP:
         weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
+
         for iteration in range(self.epoch):
-            print("Starting epoch", iteration)
-            for weight_index in range(len(network_weights)):
-                weight_gradients_on_current_iteration[weight_index] = cost_function.get_derivative_of_cost_function(training_set, weight_index)
-
-                gradient_product = weight_gradients_on_current_iteration[weight_index] * weight_gradients_on_previous_iteration[weight_index]
-                if gradient_product > 0:
-                    current_step_size[weight_index] = min(current_step_size[weight_index] * self.step_size_increase_factor, self.max_step_size)
-                elif gradient_product < 0:
-                    current_step_size[weight_index] = max(current_step_size[weight_index] * self.step_size_decrease_factor, self.min_step_size)
-                    weight_gradients_on_current_iteration[weight_index] = 0
-
-                network_weights[weight_index] = self.update_weight_with_step_size(network_weights[weight_index],
-                                                                                  weight_gradients_on_current_iteration[weight_index],
-                                                                                  current_step_size[weight_index])
-                weight_gradients_on_previous_iteration[weight_index] = weight_gradients_on_current_iteration[weight_index]
+            pool = Pool()
+            print('Starting epoch', iteration)
+            network_weights = pool.starmap(self.update_weight_for_current_epoch,
+                                                       [(network_weights[weight_index],
+                                                        cost_function,
+                                                        current_step_size[weight_index],
+                                                        training_set,
+                                                        weight_gradients_on_current_iteration[weight_index],
+                                                        weight_gradients_on_previous_iteration[weight_index],
+                                                        weight_index)for weight_index in range(len(network_weights))])
         print(network_weights)
         return network_weights
+
+    def update_weight_for_current_epoch(self, network_weight, cost_function, current_step_size,  training_set,
+                                        weight_gradient_on_current_iteration, weight_gradient_on_previous_iteration, weight_index):
+        weight_gradient_on_current_iteration = cost_function.get_derivative_of_cost_function(training_set, weight_index)
+        gradient_product = weight_gradient_on_current_iteration * weight_gradient_on_previous_iteration
+        if gradient_product > 0:
+            current_step_size[weight_index] = min(current_step_size[weight_index] * self.step_size_increase_factor,self.max_step_size)
+        elif gradient_product < 0:
+            current_step_size[weight_index] = max(current_step_size[weight_index] * self.step_size_decrease_factor, self.min_step_size)
+            weight_gradient_on_current_iteration[weight_index] = 0
+        network_weight = self.update_weight_with_step_size(network_weight, weight_gradient_on_current_iteration, current_step_size)
+        return network_weight
 
     def get_model_response(self, model_to_train, inputs):
         return model_to_train.get_output_probability(inputs)
