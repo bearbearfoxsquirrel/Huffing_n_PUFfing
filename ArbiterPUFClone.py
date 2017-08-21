@@ -7,7 +7,7 @@ class ArbiterPUFClone:
         self.model_trainer = RPROP()
         training_set = self.prepare_training_set_for_lr_training(training_set)
         self.machine_learning_model.probability_vector = \
-            self.model_trainer.train_model_irprop_minus_with_multiprocessing(self.machine_learning_model,
+            self.model_trainer.train_model_irprop_minus_without_multiprocessing(self.machine_learning_model,
                                                                                 cost_function,
                                                                                 self.machine_learning_model.probability_vector,
                                                                                 training_set)

@@ -80,23 +80,28 @@ class RPROP:
             weight_gradients_on_current_iteration = pool.starmap(cost_function.get_derivative_of_cost_function,
                                                                      [(training_set, weight_index)
                                                                       for weight_index in weight_indexes])
+            pool.close()
+
 
             gradient_products = pool.starmap(self.get_gradient_product,
                                                  [(weight_gradients_on_current_iteration[weight_index],
                                                    weight_gradients_on_previous_iteration[weight_index])
                                                   for weight_index in weight_indexes])
+            pool.close()
 
 
             current_step_size = pool.starmap(self.get_new_step_size,
                                                  [(gradient_products[weight_index],
                                                    current_step_size[weight_index])
                                                   for weight_index in weight_indexes])
+            pool.close()
 
 
             weight_gradients_on_current_iteration = pool.starmap(self.get_new_gradient_with_gradient_product,
                                                                      [(weight_gradients_on_current_iteration[weight_index],
                                                                        gradient_products[weight_index])
                                                                       for weight_index in weight_indexes])
+            pool.close()
 
             network_weights = pool.starmap(self.update_weight_with_step_size,
                                                [(network_weights[weight_index],
