@@ -3,6 +3,7 @@ from multiprocessing import Pool, Process
 from numpy.ma import dot
 from numpy import  sign, float_power
 from math import e, exp
+from functools import partial
 
 class LogisticRegressionModel:
     def __init__(self, probability_vector, constant_bias = 0):
@@ -43,39 +44,94 @@ class RPROP:
         self.epoch = epoch
         self.error_tolerance_threshold = error_tolerance_threshold
 
-    def train_model_irprop_minus(self, model_to_train, cost_function, network_weights, training_set):
-        current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
-        weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
+    def train_model_irprop_minus_without_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
+        step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
 
-        pool = Pool(processes=len(network_weights))
         for iteration in range(self.epoch):
-            print('Starting epoch', iteration)
-            network_weights = pool.starmap(self.update_weight_for_current_epoch,
-                                                       [(network_weights[weight_index],
-                                                        cost_function,
-                                                        current_step_size[weight_index],
-                                                        training_set,
-                                                        weight_gradients_on_current_iteration[weight_index],
-                                                        weight_gradients_on_previous_iteration[weight_index],
-                                                        weight_index)for weight_index in range(len(network_weights))])
-        print(network_weights)
+            print("Starting epoch", iteration)
+            for weight_index in range(len(network_weights)):
+                gradient_on_current_iteration = cost_function.get_derivative_of_cost_function(training_set, weight_index)
+
+                gradient_product = self.get_gradient_product(gradient_on_current_iteration,
+                                                             weight_gradients_on_previous_iteration[weight_index])
+
+                step_size[weight_index] = self.get_new_step_size(gradient_product, step_size[weight_index])
+
+                gradient_on_current_iteration = self.get_new_gradient_with_gradient_product(gradient_on_current_iteration,
+                                                                                                   gradient_product)
+
+                network_weights[weight_index] = self.update_weight_with_step_size(network_weights[weight_index],
+                                                                    gradient_on_current_iteration,
+                                                                    step_size[weight_index])
+
+                weight_gradients_on_previous_iteration[weight_index] = gradient_on_current_iteration
+            print(network_weights, "\n")
         return network_weights
 
-    def update_weight_for_current_epoch(self, network_weight, cost_function, current_step_size,  training_set,
-                                        weight_gradient_on_current_iteration, weight_gradient_on_previous_iteration, weight_index):
-        weight_gradient_on_current_iteration = cost_function.get_derivative_of_cost_function(training_set, weight_index)
-        gradient_product = weight_gradient_on_current_iteration * weight_gradient_on_previous_iteration
-        if gradient_product > 0:
-            current_step_size[weight_index] = min(current_step_size[weight_index] * self.step_size_increase_factor,self.max_step_size)
-        elif gradient_product < 0:
-            current_step_size[weight_index] = max(current_step_size[weight_index] * self.step_size_decrease_factor, self.min_step_size)
-            weight_gradient_on_current_iteration[weight_index] = 0
-        network_weight = self.update_weight_with_step_size(network_weight, weight_gradient_on_current_iteration, current_step_size)
-        return network_weight
+    def train_model_irprop_minus_with_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
+        current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
+        weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
+        weight_indexes = list(range(len(network_weights)))
 
-    def get_model_response(self, model_to_train, inputs):
-        return model_to_train.get_output_probability(inputs)
+        for epoch in range(self.epoch):
+            pool = Pool()
+            print("Starting epoch", epoch)
+            weight_gradients_on_current_iteration = pool.starmap(cost_function.get_derivative_of_cost_function,
+                                                                     [(training_set, weight_index)
+                                                                      for weight_index in weight_indexes])
+
+            gradient_products = pool.starmap(self.get_gradient_product,
+                                                 [(weight_gradients_on_current_iteration[weight_index],
+                                                   weight_gradients_on_previous_iteration[weight_index])
+                                                  for weight_index in weight_indexes])
+
+
+            current_step_size = pool.starmap(self.get_new_step_size,
+                                                 [(gradient_products[weight_index],
+                                                   current_step_size[weight_index])
+                                                  for weight_index in weight_indexes])
+
+
+            weight_gradients_on_current_iteration = pool.starmap(self.get_new_gradient_with_gradient_product,
+                                                                     [(weight_gradients_on_current_iteration[weight_index],
+                                                                       gradient_products[weight_index])
+                                                                      for weight_index in weight_indexes])
+
+            network_weights = pool.starmap(self.update_weight_with_step_size,
+                                               [(network_weights[weight_index],
+                                                weight_gradients_on_current_iteration[weight_index],
+                                                current_step_size[weight_index])
+                                                for weight_index in weight_indexes])
+
+            pool.close()
+            pool.join()
+
+            weight_gradients_on_previous_iteration = [gradient for gradient in weight_gradients_on_current_iteration]
+
+
+            print(network_weights, "\n")
+        return network_weights
+
+    def get_new_gradient_with_gradient_product(self, current_weight_gradient, gradient_product):
+        return 0 if gradient_product < 0 else current_weight_gradient
+
+    def get_new_step_size(self, gradient_product, current_step_size):
+            if gradient_product > 0:
+                return self.get_increased_step_size(current_step_size)
+            elif gradient_product < 0:
+                return self.get_decreased_step_size(current_step_size)
+            else:
+                return current_step_size
+
+    def get_increased_step_size(self, current_step_size):
+        return min(current_step_size * self.step_size_increase_factor, self.max_step_size)
+
+    def get_decreased_step_size(self, current_step_size):
+        return max(current_step_size * self.step_size_decrease_factor, self.min_step_size)
+
+    def get_gradient_product(self, weight_gradient_on_current_iteration, weight_gradients_on_previous_iteration):
+        return weight_gradient_on_current_iteration * weight_gradients_on_previous_iteration
 
     def update_weight_with_step_size(self, weight, weight_gradient, update_step_size):
         return weight - sign(weight_gradient) * update_step_size
@@ -83,14 +139,3 @@ class RPROP:
     def is_model_okie(self, testing_set):
         pass
         #TODO test to see if weights keep to a certain accuracy threshold
-
-'''
-class GradientDescent:
-    def __init__(self):
-
-        def get_cost(machine_answers, training_answers):
-            return sum((get_error_of_machine_answer(machine_answer, training_answer) for machine_answer, training_answer in zip (machine_answers, training_answers)))
-
-        def get_error_of_machine_answer(self, network_response, training_response):
-            return pow(training_response - training_response, 2) / 2
-'''

@@ -29,20 +29,18 @@ def save_training_set_to_json(training_set, output_file):
         json.dump([training_example.__dict__ for training_example in training_set], output_file, indent=4)
 
 def get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests):
-    tests_passed = 0
-    for test in tests:
-        original_puf_response = original_puf.get_response(test)
-        clone_puf_response = clone_puf.get_response(test)
-        if clone_puf_response == original_puf_response:
-            tests_passed += 1
-    return tests_passed
+    with Pool() as pooler:
+        results = pooler.starmap(does_clone_response_match_original,
+                                      [(original_puf.get_response(test), clone_puf.get_response(test)) for test in tests])
+    pooler.join()
+    return sum(results)
 
 def print_ml_accuracy(number_of_tests, tests_passed):
     print((tests_passed / number_of_tests) * 100, '% accuracy on tests')
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 8
+    puf_challenge_bit_length = 16
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics)
@@ -59,8 +57,10 @@ def puf_attack_sim():
 
     #testing the clone to ensure it has the same output as the original puf
     number_of_tests = 100000
-    pool = Pool()
-    tests_for_puf = pool.map(generate_random_puf_challenge, [(original_puf.challenge_bits) for length in range(number_of_tests)])
+    with Pool() as pool:
+        tests_for_puf = pool.map(generate_random_puf_challenge, [(original_puf.challenge_bits) for length in range(number_of_tests)])
+    pool.join()
+
     print_ml_accuracy(number_of_tests, get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests_for_puf))
 
 if __name__ == '__main__':
