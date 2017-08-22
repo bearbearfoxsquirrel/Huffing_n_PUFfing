@@ -1,5 +1,5 @@
 from CRP import CRP
-from multiprocessing import Pool
+from multiprocessing import Pool, Queue, Process
 from numpy.ma import dot
 from numpy import  ndindex, sign, float_power
 from math import e, exp
@@ -10,7 +10,6 @@ class LogisticRegressionModel:
         self.constant_bias = constant_bias
 
     def get_output_probability(self, input_vector):
-        #assert len(input_vector) == len(self.probability_vector)
         sigmoid = lambda input: 1 / (1 + float_power(e, input))
         dot_product_of_input_and_probability = dot(input_vector, self.probability_vector)
         probability = sigmoid(dot_product_of_input_and_probability)
@@ -38,11 +37,13 @@ class LogisticRegressionCostFunction:
                     for training_example in training_examples])
 
     def get_sum_of_squared_errors_with_multiprocessing(self, training_examples, weight_index):
-        pool = Pool()
-        sum_of_squared_errors = pool.starmap(self.get_squared_error, [(training_example.response,
+        pooler = Pool()
+        sum_of_squared_errors = pooler.starmap(self.get_squared_error, [(training_example.response,
                                            self.logistic_regression_model.get_output_probability(training_example.challenge),
                                            training_example.challenge[weight_index])
                     for training_example in training_examples])
+        pooler.close()
+        pooler.join()
         return sum(sum_of_squared_errors)
 
     def get_squared_error(self, training_response, model_response, input):
@@ -89,15 +90,12 @@ class RPROP:
         current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
         weight_indexes = list(range(len(network_weights)))
-        chunksize = 1
         for epoch in range(self.epoch):
             pool = Pool()
             print("Starting epoch", epoch)
             weight_gradients_on_current_iteration = pool.starmap(cost_function.get_derivative_of_cost_function_without_multiprocessing,
                                                                      [(training_set, weight_index)
                                                                       for weight_index in weight_indexes])
-
-
 
             gradient_products = pool.starmap(self.get_gradient_product,
                                                  [(weight_gradients_on_current_iteration[weight_index],

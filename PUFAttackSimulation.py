@@ -46,7 +46,7 @@ def puf_attack_sim():
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 1000)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 10000)
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
 
