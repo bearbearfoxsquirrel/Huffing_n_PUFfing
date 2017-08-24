@@ -145,10 +145,10 @@ class RPROP:
 
     def train_model_irprop_minus_with_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
         step_size, weight_gradients_on_previous_iteration, weight_indexes = self.get_initial_variables(network_weights)
+        pool = Pool()
 
         for epoch in range(self.epoch):
             print("Starting epoch", epoch)
-            pool = Pool()
             for weight_index in weight_indexes:
                 weight_gradient_on_current_iteration = \
                     cost_function.get_derivative_of_cost_function_with_multiprocessing(training_set, weight_index, pool)
@@ -166,9 +166,10 @@ class RPROP:
                                                                     step_size[weight_index])
 
                 weight_gradients_on_previous_iteration[weight_index] = gradient_on_current_iteration
-            pool.close()
-            pool.join()
             print(network_weights, "\n")
+
+        pool.close()
+        pool.join()
         return network_weights
 
     def get_new_gradient_with_gradient_product(self, current_weight_gradient, gradient_product):

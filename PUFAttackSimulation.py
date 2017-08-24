@@ -7,6 +7,8 @@ from LogisticRegression import LogisticRegressionModel, LogisticRegressionCostFu
 import random
 from multiprocessing import Pool
 from time import time
+from Simplified_Arbiter_PUF import SimplifiedArbiterPUF
+from CMAEvolutionStrategy import ArbiterPUFFitnessMetric, CMAEvolutionStrategy
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
     # 4 delays for each stage to represent p, q, r & s delay
@@ -39,7 +41,7 @@ def print_ml_accuracy(number_of_tests, tests_passed):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 64
+    puf_challenge_bit_length = 2
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics)
@@ -51,12 +53,23 @@ def puf_attack_sim():
 
     #create clone PUF
     initial_probability_vector = [random.random() for weight in range(puf_challenge_bit_length)]
-    logistic_regression_model = LogisticRegressionModel(initial_probability_vector)
-    clone_puf = ArbiterPUFClone(logistic_regression_model, PUFClassifier())
     start_time = time()
-    clone_puf.train_machine_learning_model_with_multiprocessing(RPROP(),
-                                                                puf_clone_training_set,
-                                                                LogisticRegressionCostFunction(clone_puf.machine_learning_model))
+
+    #LOGISTIC REGRESSION
+    #logistic_regression_model = LogisticRegressionModel(initial_probability_vector)
+   # clone_puf = ArbiterPUFClone(logistic_regression_model, PUFClassifier())
+    #clone_puf.train_machine_learning_model_without_multiprocessing(RPROP(),
+     #                                                           puf_clone_training_set,
+      #                                                          LogisticRegressionCostFunction(clone_puf.machine_learning_model))
+
+    #CMA-ES
+    cmaes_puf = SimplifiedArbiterPUF(initial_probability_vector)
+    cmaes_puf.delay_vector = CMAEvolutionStrategy(ArbiterPUFFitnessMetric(puf_clone_training_set), cmaes_puf.challenge_bits).get_best_candidate_solution()
+    #TODO cma-es here
+    #
+
+
+
     training_time = time() - start_time
     print("Time to train is", training_time)
 
@@ -65,7 +78,7 @@ def puf_attack_sim():
     pool = Pool()
     tests_for_puf = pool.map(generate_random_puf_challenge, [(original_puf.challenge_bits) for length in range(number_of_tests)])
 
-    print_ml_accuracy(number_of_tests, get_test_results_of_puf_clone_against_original(clone_puf, original_puf, tests_for_puf, pool))
+    print_ml_accuracy(number_of_tests, get_test_results_of_puf_clone_against_original(cmaes_puf, original_puf, tests_for_puf, pool))
     pool.close()
     pool.join()
 
