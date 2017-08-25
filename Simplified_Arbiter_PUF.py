@@ -1,4 +1,5 @@
 from numpy import sign, dot
+import pandas
 
 class SimplifiedArbiterPUF:
     def __init__(self, delay_vector):
