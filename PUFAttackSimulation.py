@@ -8,7 +8,9 @@ import random
 from multiprocessing import Pool
 from time import time
 from Simplified_Arbiter_PUF import SimplifiedArbiterPUF
-from CMAEvolutionStrategy import ArbiterPUFFitnessMetric, CMAEvolutionStrategy
+from CMAEvolutionStrategy import CMAEvolutionStrategy
+from ArbiterPUFFitnessMetric import ArbiterPUFFitnessMetric
+from NaturalEvoultionStrategy import NaturalEvolutionStrategy
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
     # 4 delays for each stage to represent p, q, r & s delay
@@ -41,14 +43,14 @@ def print_ml_accuracy(number_of_tests, tests_passed):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 8
+    puf_challenge_bit_length = 128
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 400)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 600)
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
@@ -58,14 +60,16 @@ def puf_attack_sim():
     #LOGISTIC REGRESSION
     #logistic_regression_model = LogisticRegressionModel(initial_probability_vector)
    # clone_puf = ArbiterPUFClone(logistic_regression_model, PUFClassifier())
-    #clone_puf.train_machine_learning_model_without_multiprocessing(RPROP(),
+    #clone_puf.train_machine_learning_model_with_multiprocessing(RPROP(),
      #                                                           puf_clone_training_set,
       #                                                          LogisticRegressionCostFunction(clone_puf.machine_learning_model))
 
     #CMA-ES
     cmaes_puf = SimplifiedArbiterPUF(initial_probability_vector)
-    cmaes_puf.delay_vector = CMAEvolutionStrategy(ArbiterPUFFitnessMetric(puf_clone_training_set), cmaes_puf.challenge_bits).get_best_candidate_solution(1)
+    #cmaes_puf.delay_vector = CMAEvolutionStrategy(ArbiterPUFFitnessMetric(puf_clone_training_set), cmaes_puf.challenge_bits).train(1)
     #TODO cma-es here
+    cmaes_puf.delay_vector = NaturalEvolutionStrategy(cmaes_puf.challenge_bits,
+                                                      ArbiterPUFFitnessMetric(puf_clone_training_set)).train()
     #
 
 

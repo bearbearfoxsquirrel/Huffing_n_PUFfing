@@ -10,4 +10,5 @@ class SimplifiedArbiterPUF:
     def get_response(self, challenge_configuration):
         # Challenge_configuration refers to the vector representing a binary input of chosen path for the electrical signal
         # Return 0 if total delta is >= 0 else return 1
-        return int(sign(dot(self.delay_vector, challenge_configuration)))
+        delay_delta = dot(self.delay_vector, challenge_configuration)
+        return int(sign(delay_delta))

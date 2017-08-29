@@ -1,20 +1,8 @@
-from numpy import identity, sqrt, power, exp, floor, log, conjugate, divide, mean, hamming, sum, dot, count_nonzero, multiply,square, add, subtract, eye
+from numpy import identity, sqrt, power, exp, floor, log, divide, sum,  multiply,square,subtract
 from numpy.random import multivariate_normal
-from numpy.ma import sum, dot, transpose, argsort
+from numpy.ma import sum, dot, transpose
 from random import random
 from numpy.linalg import inv
-from Simplified_Arbiter_PUF import SimplifiedArbiterPUF
-
-class ArbiterPUFFitnessMetric:
-    def __init__(self, training_set):
-        self.training_set = training_set
-
-    def get_fitness(self, candidate_vector):
-        candidate_puf = SimplifiedArbiterPUF(candidate_vector)
-        fitness = sum([count_nonzero(training_example.response - candidate_puf.get_response(training_example.challenge))
-                    for training_example in self.training_set])
-        print("Fitness:", fitness)
-        return fitness
 
 class CMAEvolutionStrategy:
     def __init__(self, fitness_metric, problem_dimension, learning_rate = 1,
@@ -81,14 +69,15 @@ class CMAEvolutionStrategy:
         self.division_thingy = 1 + 2 * max([0, sqrt(((self.variance_effective_selection_mass - 1) / self.population_size + 1) + 1)]) \
                                + self.discount_factor_for_isotropic
 
-    def get_best_candidate_solution(self, fitness_requirement):
+    def train(self, fitness_requirement):
         generation = 0
-        while self.fitness_metric.get_fitness(self.current_distribution_mean_of_normal) >= fitness_requirement:
+        while self.fitness_metric.get_fitness(self.current_distribution_mean_of_normal) <= fitness_requirement:
             print("Generation", generation)
             self.update_for_next_generation()
             generation += 1
-
         return self.current_distribution_mean_of_normal
+
+
 
     def update_for_next_generation(self):
         sample_candidates = self.get_new_sample_candidates()
@@ -115,7 +104,7 @@ class CMAEvolutionStrategy:
 
     def get_sample_from_multivariate_normal_distribution(self):
         sample_candidate =  (self.current_distribution_mean_of_normal
-                + (square(self.step_size) * multivariate_normal([0 for value in range(self.problem_dimension)],
+                + (self.step_size * multivariate_normal([0 for value in range(self.problem_dimension)],
                                                                                self.covariance_matrix)))
         #print("Candidate:", sample_candidate)
         return sample_candidate
@@ -204,7 +193,7 @@ class CMAEvolutionStrategy:
         return multiply(self.anisotropic_evolution_path, transpose(self.anisotropic_evolution_path))
 
     def get_rank_minimum_matrix(self, sorted_sample_population):
-        return sum([dot((self.get_steped_difference(sorted_sample) * transpose(self.get_steped_difference(sorted_sample))), weight)
+        return sum([multiply((self.get_steped_difference(sorted_sample) * transpose(self.get_steped_difference(sorted_sample))), weight)
                     for weight, sorted_sample in zip(self.get_adjusted_weights(sorted_sample_population), sorted_sample_population)])
 
     def get_adjusted_weights(self, sorted_sample_population):
@@ -217,7 +206,7 @@ class CMAEvolutionStrategy:
                                                                      / self.step_size)))
 
     def get_inverse_of_covariance_matrix(self):
-        return inv(self.covariance_matrix)
+            return inv(self.covariance_matrix)
 
     def get_steped_difference(self, sorted_sample):
         return divide(subtract(sorted_sample, self.current_distribution_mean_of_normal),
