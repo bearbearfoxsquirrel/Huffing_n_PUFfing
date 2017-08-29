@@ -10,7 +10,7 @@ from time import time
 from Simplified_Arbiter_PUF import SimplifiedArbiterPUF
 from CMAEvolutionStrategy import CMAEvolutionStrategy
 from ArbiterPUFFitnessMetric import ArbiterPUFFitnessMetric
-from NaturalEvoultionStrategy import NaturalEvolutionStrategy
+from NaturalEvoultionStrategy import NaturalEvolutionStrategy, MyNaturalEvolutionStrategy
 
 def generate_random_physical_characteristics_for_arbiter_puf(number_of_challenges):
     # 4 delays for each stage to represent p, q, r & s delay
@@ -68,8 +68,8 @@ def puf_attack_sim():
     cmaes_puf = SimplifiedArbiterPUF(initial_probability_vector)
     #cmaes_puf.delay_vector = CMAEvolutionStrategy(ArbiterPUFFitnessMetric(puf_clone_training_set), cmaes_puf.challenge_bits).train(1)
     #TODO cma-es here
-    cmaes_puf.delay_vector = NaturalEvolutionStrategy(cmaes_puf.challenge_bits,
-                                                      ArbiterPUFFitnessMetric(puf_clone_training_set)).train()
+    cmaes_puf.delay_vector = MyNaturalEvolutionStrategy(cmaes_puf.challenge_bits,
+                                                      ArbiterPUFFitnessMetric(puf_clone_training_set)).train(600)
     #
 
 

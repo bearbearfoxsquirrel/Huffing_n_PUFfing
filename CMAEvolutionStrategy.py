@@ -5,7 +5,7 @@ from random import random
 from numpy.linalg import inv
 
 class CMAEvolutionStrategy:
-    def __init__(self, fitness_metric, problem_dimension, learning_rate = 1,
+    def __init__(self, problem_dimension, fitness_metric, learning_rate = 1,
                  population_size = 4, default_step_size = 0.3):
         self.fitness_metric = fitness_metric
         self.problem_dimension = problem_dimension
