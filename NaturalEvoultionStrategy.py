@@ -4,13 +4,13 @@ from numpy.ma import dot
 
 class NaturalEvolutionStrategy:
     def __init__(self, problem_dimension, fitness_metric,
-                 sample_population_size = 500, noise_factor = 1, learning_rate = 0.1):
+                 sample_population_size = 100, noise_factor = 1, learning_rate = 1):
         self.problem_dimension = problem_dimension
         self.fitness_metric = fitness_metric
         self.sample_population_size = sample_population_size
         self.noise_factor = noise_factor
         self.min_log_learning_rate = log(0.001)
-        self.log_learning_rate = log(learning_rate)
+        self.learning_rate = learning_rate
 
         #remove learning rate
         #make noise factor vary
@@ -29,6 +29,8 @@ class NaturalEvolutionStrategy:
             print("Generation", i)
             print("mean solution's accuracy: %s, reward: %f" %
                     (str(self.get_accuracy(mean_solution)), self.fitness_metric.get_fitness(mean_solution)))
+            print("learning rate", self.learning_rate)
+            print("noise factor", self.noise_factor, '\n\n===============================\n')
 
             self.noise_factor =  1 - self.get_accuracy(mean_solution)
 
@@ -47,22 +49,19 @@ class NaturalEvolutionStrategy:
                                    / std(jittered_samples_rewards))
 
             proposed_mean_solution = (mean_solution
-                                      + exp(self.log_learning_rate) / (self.sample_population_size * self.noise_factor)
+                                      + self.learning_rate / (self.sample_population_size * self.noise_factor)
                                       * dot(sample_candidates.T, standardised_rewards))
 
             #print('standardised rewards', standardised_rewards)
             proposed_fitness = self.fitness_metric.get_fitness(proposed_mean_solution)
 
 
-            self.log_learning_rate = log(exp(self.log_learning_rate) * 1.5)  if (proposed_fitness > current_fitness) \
-               else (log(exp(self.log_learning_rate) * 0.5))
+            self.learning_rate = self.learning_rate * 2  if (proposed_fitness > current_fitness) \
+               else self.learning_rate * 0.80
 
             if proposed_fitness >= current_fitness:
                 mean_solution = proposed_mean_solution
                 current_fitness = proposed_fitness
-
-            print("learning rate", self.log_learning_rate)
-            print("noise factor", self.noise_factor, '\n\n===============================\n')
             i += 1
         print(mean_solution)
         return mean_solution
