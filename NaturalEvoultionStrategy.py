@@ -1,35 +1,43 @@
-from numpy import log, zeros, exp, std, mean, float128, square, transpose
+from numpy import log, zeros, exp, std, mean, square, transpose, array
 from numpy.random import randn
 from numpy.ma import dot
 
 class MyNaturalEvolutionStrategy:
-    def __init__(self, problem_dimension, fitness_metric, sample_population_size = 10):
+    def __init__(self, problem_dimension, fitness_metric, sample_population_size = 100):
         self.problem_dimension = problem_dimension
         self.fitness_metric = fitness_metric
         self.sample_population_size = sample_population_size
         self.noise_factor = sample_population_size / square(problem_dimension)
         self.mean_solution = randn(problem_dimension) #initial guess
         self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
+        self.best_solution_thus_far = self.mean_solution
+        self.best_solution_thus_far_fitness = self.mean_solutions_fitness
 
     def train(self, fitness_requirement):
         generation_index = 0
         while self.mean_solutions_fitness < fitness_requirement:
-            self.noise_factor =  1 - (self.mean_solutions_fitness / fitness_requirement)
+            self.noise_factor =  1 - (self.best_solution_thus_far_fitness / fitness_requirement)
             print("Generation", generation_index)
             print("noise factor", self.noise_factor)
+            print("best solution's accuracy: %s" %
+                  (str(self.best_solution_thus_far_fitness)))
             print("mean solution's accuracy: %s" %
                   (str(self.mean_solutions_fitness)))
             print('\n\n===================================\n')
-            generation_samples = randn(self.sample_population_size, self.problem_dimension) + self.mean_solution
-            generation_samples *= self.noise_factor
+            generation_samples = randn(self.sample_population_size, self.problem_dimension) + self.best_solution_thus_far
+            generation_samples *= (self.noise_factor)
 
             generation_samples_rewards = [self.fitness_metric.get_fitness(sample) for sample in generation_samples]
             weighted_rewards = generation_samples_rewards - mean(generation_samples_rewards)
-
-            self.mean_solution += dot(transpose(generation_samples), weighted_rewards) / (self.noise_factor * self.sample_population_size)
+            self.mean_solution = (self.best_solution_thus_far + dot(transpose(generation_samples), weighted_rewards)
+                                  / (self.noise_factor * self.sample_population_size))
             self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
+
+            if self.mean_solutions_fitness >= self.best_solution_thus_far_fitness:
+                self.best_solution_thus_far = self.mean_solution
+                self.best_solution_thus_far_fitness = self.mean_solutions_fitness
             generation_index += 1
-        return self.mean_solution
+        return self.best_solution_thus_far
 
 class NaturalEvolutionStrategy:
     def __init__(self, problem_dimension, fitness_metric,
@@ -62,7 +70,7 @@ class NaturalEvolutionStrategy:
            # self.noise_factor =  (1 - self.get_accuracy(mean_solution)) * self.noise_factor_scaling
 
             sample_candidates = randn(self.sample_population_size, self.problem_dimension)
-            jittered_samples_rewards = zeros(self.sample_population_size, dtype=float128)
+            jittered_samples_rewards = zeros(self.sample_population_size)
 
             for sample_index in range(self.sample_population_size):
                 jittered_sample_candidate = mean_solution + (self.noise_factor * sample_candidates[sample_index])

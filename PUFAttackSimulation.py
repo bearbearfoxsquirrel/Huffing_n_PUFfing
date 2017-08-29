@@ -43,14 +43,14 @@ def print_ml_accuracy(number_of_tests, tests_passed):
 
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
-    puf_challenge_bit_length = 32
+    puf_challenge_bit_length = 64
     random_physical_characteristics = generate_random_physical_characteristics_for_arbiter_puf(puf_challenge_bit_length)
 
     original_puf = ArbiterPUF(random_physical_characteristics)
     print(DataFrame(original_puf.puf_delay_parameters))
 
     #create a training set of CRPs for the clone to train on
-    puf_clone_training_set = create_puf_clone_training_set(original_puf, 600)
+    puf_clone_training_set = create_puf_clone_training_set(original_puf, 1000)
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
     #create clone PUF
@@ -69,7 +69,7 @@ def puf_attack_sim():
     #cmaes_puf.delay_vector = CMAEvolutionStrategy(ArbiterPUFFitnessMetric(puf_clone_training_set), cmaes_puf.challenge_bits).train(1)
     #TODO cma-es here
     cmaes_puf.delay_vector = MyNaturalEvolutionStrategy(cmaes_puf.challenge_bits,
-                                                      ArbiterPUFFitnessMetric(puf_clone_training_set)).train(600)
+                                                      ArbiterPUFFitnessMetric(puf_clone_training_set)).train(1000)
     #
 
 
