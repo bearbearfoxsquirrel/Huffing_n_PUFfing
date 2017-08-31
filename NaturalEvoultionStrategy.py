@@ -1,63 +1,64 @@
-from numpy import log, zeros, exp, std, mean, square, transpose, array, floor_divide, delete
+from numpy import log, zeros, exp, std, mean, square, transpose, floor_divide, sqrt, divide, abs, min, tanh
 from numpy.random import randn
 from numpy.ma import dot
 
 class MyNaturalEvolutionStrategy:
-    def __init__(self, problem_dimension, fitness_metric, sample_population_size = 40):
+    def __init__(self, problem_dimension, fitness_metric, sample_population_size = 50):
         self.problem_dimension = problem_dimension
         self.fitness_metric = fitness_metric
         self.sample_population_size = sample_population_size
-        self.noise_factor = sample_population_size / square(problem_dimension)
         self.mean_solution = randn(problem_dimension) #initial guess
         self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
+        self.noise_factor = 1
 
     def train(self, fitness_requirement):
         generation_index = 0
+        print("Original guesses fitness", self.mean_solutions_fitness)
+        print("\n")
         while self.mean_solutions_fitness < fitness_requirement:
-            self.noise_factor = (fitness_requirement / self.mean_solutions_fitness)
             print("Generation", generation_index)
+
+            self.noise_factor = self.get_noise_factor(fitness_requirement)
+            noises = self.get_noises()
+            samples = noises + self.mean_solution
+
+            sample_rewards = self.get_fitness_of_samples(samples)
+            print("sample rewards", sample_rewards)
+            weighted_rewards = self.get_weighted_rewards(sample_rewards)
+
+            direction_to_head = samples - self.mean_solution
+            direction_to_head = dot(direction_to_head.transpose(), weighted_rewards)
+
+            self.mean_solution += direction_to_head / self.sample_population_size#* self.get_smoothing_factor()
+            self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
+
             print("population size", self.sample_population_size)
             print("noise factor", self.noise_factor)
-            print("mean solution's accuracy: %s" %
-                  (str(self.mean_solutions_fitness)))
+            print("mean solution's fitness: %s" % (str(self.mean_solutions_fitness)))
             print('\n\n===================================\n')
-            generation_samples = (randn(self.sample_population_size, self.problem_dimension)) - self.mean_solution
-            generation_samples *= (self.noise_factor)
 
-            generation_samples_rewards = [self.fitness_metric.get_fitness(sample) for sample in generation_samples]
-            weighted_rewards = generation_samples_rewards - mean(generation_samples_rewards)
-            for index in range(self.sample_population_size):
-                if weighted_rewards[index] < 0:
-                    delete(weighted_rewards, index)
-                    delete(generation_samples, index)
-            self.mean_solution = (self.mean_solution + dot(transpose(generation_samples), weighted_rewards)
-                                  / (len(weighted_rewards) + 1))
-            self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
             generation_index += 1
         return self.mean_solution
 
-    '''
-    def train(self, fitness_requirement):
-        generation_index = 0
-        while self.mean_solutions_fitness < fitness_requirement:
-            self.noise_factor = 1 - (self.mean_solutions_fitness / fitness_requirement)
-            print("Generation", generation_index)
-            print("noise factor", self.noise_factor)
-            print("mean solution's accuracy: %s" %
-                  (str(self.mean_solutions_fitness)))
-            print('\n\n===================================\n')
-            generation_samples = randn(self.sample_population_size, self.problem_dimension) + self.mean_solution
-            generation_samples *= self.noise_factor
+    def get_noise_factor(self, fitness_requirement):
+        return  1 - ((self.mean_solutions_fitness) / (fitness_requirement)) + 1
 
-            generation_samples_rewards = [self.fitness_metric.get_fitness(sample) for sample in generation_samples]
-            weighted_rewards = generation_samples_rewards - mean(generation_samples_rewards)
+    def get_fitness_of_samples(self, samples):
+        return [self.fitness_metric.get_fitness(sample) for sample in samples]
 
-            self.mean_solution += dot(transpose(generation_samples), weighted_rewards) / (
-            self.noise_factor * self.sample_population_size)
-            self.mean_solutions_fitness = self.fitness_metric.get_fitness(self.mean_solution)
-            generation_index += 1
-        return self.mean_solution
-    '''
+    def get_weighted_rewards(self, samples_rewards):
+        weighted_rewards =  (samples_rewards - mean(samples_rewards)) / std(samples_rewards)
+        return weighted_rewards
+
+    def get_noises(self):
+        random_noises = randn(self.sample_population_size, self.problem_dimension) * self.noise_factor
+        return random_noises
+
+    def get_smoothing_factor(self):
+        smoothing_degree = exp(self.noise_factor) / 10
+        print("smoothing factor noise factor squared,", smoothing_degree)
+        return smoothing_degree
+
 
 class NaturalEvolutionStrategy:
     def __init__(self, problem_dimension, fitness_metric,
@@ -67,10 +68,6 @@ class NaturalEvolutionStrategy:
         self.sample_population_size = sample_population_size
         self.noise_factor = noise_factor
         self.learning_rate = learning_rate
-        #remove learning rate
-        #make noise factor vary
-        #high population size
-        #keep track of best solution
 
     def train(self):
         mean_solution =  randn(self.problem_dimension)
@@ -92,7 +89,7 @@ class NaturalEvolutionStrategy:
 
             mean_solution = (mean_solution
                                       + self.learning_rate / (self.sample_population_size * self.noise_factor)
-                                      * dot(sample_candidates.T, (standardised_rewards)))
+                                      * dot(sample_candidates.T, standardised_rewards))
             i += 1
         print(mean_solution)
         return mean_solution
