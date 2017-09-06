@@ -84,59 +84,6 @@ class RPROP:
             print(network_weights, "\n")
         return network_weights
 
-    # def train_model_irprop_minus_with_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
-    #     current_step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
-    #     weight_gradients_on_current_iteration = [0.0 for value in range(len(network_weights))]
-    #     weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
-    #     weight_indexes = list(range(len(network_weights)))
-    #
-    #
-    #     for epoch in range(self.epoch):
-    #         print("Starting epoch", epoch)
-    #         pool = Pool()
-    #         for weight_index in weight_indexes:
-    #             weight_gradients_on_current_iteration[weight_index] = \
-    #                 cost_function.get_derivative_of_cost_function_with_multiprocessing(training_set, weight_index, pool)
-    #         pool.close()
-    #         pool.join()
-    #
-    #
-    #         pool = Pool()
-    #         gradient_products = pool.starmap(self.get_gradient_product,
-    #                                              [(weight_gradients_on_current_iteration[weight_index],
-    #                                                weight_gradients_on_previous_iteration[weight_index])
-    #                                               for weight_index in weight_indexes])
-    #         pool.close()
-    #         pool.join()
-    #
-    #         pool = Pool()
-    #         current_step_size = pool.starmap(self.get_new_step_size,
-    #                                              [(gradient_products[weight_index],
-    #                                                current_step_size[weight_index])
-    #                                               for weight_index in weight_indexes])
-    #         pool.close()
-    #         pool.join()
-    #
-    #         pool = Pool()
-    #         weight_gradients_on_current_iteration = pool.starmap(self.get_new_gradient_with_gradient_product,
-    #                                                                  [(weight_gradients_on_current_iteration[weight_index],
-    #                                                                    gradient_products[weight_index])
-    #                                                                   for weight_index in weight_indexes])
-    #         pool.close()
-    #         pool.join()
-    #
-    #         pool = Pool()
-    #         network_weights = pool.starmap(self.update_weight_with_step_size,
-    #                                            [(network_weights[weight_index],
-    #                                             weight_gradients_on_current_iteration[weight_index],
-    #                                             current_step_size[weight_index])
-    #                                             for weight_index in weight_indexes])
-    #         pool.close()
-    #         pool.join()
-    #
-    #         weight_gradients_on_previous_iteration = [gradient for gradient in weight_gradients_on_current_iteration]
-    #         print(network_weights, "\n")
-    #     return network_weights
     def get_initial_variables(self, network_weights):
         step_size = [self.default_step_size for weight_step_size in range(len(network_weights))]
         weight_gradients_on_previous_iteration = [0.0 for value in range(len(network_weights))]
@@ -167,7 +114,6 @@ class RPROP:
 
                 weight_gradients_on_previous_iteration[weight_index] = gradient_on_current_iteration
             print(network_weights, "\n")
-
         pool.close()
         pool.join()
         return network_weights
@@ -194,7 +140,3 @@ class RPROP:
 
     def update_weight_with_step_size(self, weight, weight_gradient, update_step_size):
         return weight - sign(weight_gradient) * update_step_size
-
-    def is_model_okie(self, testing_set):
-        pass
-        #TODO test to see if weights keep to a certain accuracy threshold
