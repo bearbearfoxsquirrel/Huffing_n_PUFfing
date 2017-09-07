@@ -91,7 +91,7 @@ def generate_xor_arbiter_puf(bit_length, number_of_xors):
 def puf_attack_sim():
     #Original PUF to be cloned, has a randomly generated vector for input (physical characteristics) and a given challenge bit length (number of stages)
     puf_challenge_bit_length = 128
-    number_of_xors = 1
+    number_of_xors = 0
     original_puf = generate_arbiter_puf(puf_challenge_bit_length)
     #original_puf = generate_xor_arbiter_puf(puf_challenge_bit_length, number_of_xors)
 
@@ -100,9 +100,12 @@ def puf_attack_sim():
     puf_clone_training_set = create_puf_clone_training_set(original_puf, training_set_length)
     #save_training_set_to_json(puf_clone_training_set, 'ArbiterPUF_Training_Set.json')
 
+    print("original puf: bit_length", puf_challenge_bit_length,
+          "number of xors", number_of_xors, "training set length", len(puf_clone_training_set))
     #create clone PUF
     start_time = time()
     puf_clone = generate_arbiter_clone_with_my_nes(puf_challenge_bit_length, puf_clone_training_set)
+    #puf_clone = generate_arbiter_clone_with_lr_rprop(puf_challenge_bit_length, puf_clone_training_set)
     #puf_clone = generate_xor_arbiter_clone_with_my_nes(puf_challenge_bit_length, number_of_xors, puf_clone_training_set)
     training_time = time() - start_time
     print("Time to train is", training_time)
