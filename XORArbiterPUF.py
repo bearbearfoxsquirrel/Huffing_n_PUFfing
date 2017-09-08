@@ -1,6 +1,7 @@
 from Simplified_Arbiter_PUF import SimplifiedArbiterPUF
 from numpy import bitwise_xor
 
+
 class XORArbiterPUF:
     def __init__(self, arbiter_pufs):
         assert len(arbiter_pufs) >= 2

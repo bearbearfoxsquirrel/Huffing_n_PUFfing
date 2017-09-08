@@ -1,12 +1,13 @@
 from CRP import CRP
 from multiprocessing import Pool, Queue, Process
 from numpy.ma import dot, sum
-from numpy import  ndindex, sign, float_power
+from numpy import ndindex, sign, float_power
 from math import e, exp
 from time import time
 
+
 class LogisticRegressionModel:
-    def __init__(self, probability_vector, constant_bias = 0):
+    def __init__(self, probability_vector, constant_bias=0):
         self.probability_vector = probability_vector
         self.constant_bias = constant_bias
 
@@ -16,13 +17,15 @@ class LogisticRegressionModel:
         probability = sigmoid(dot_product_of_input_and_probability)
         return probability
 
+
 class LogisticRegressionCostFunction:
     def __init__(self, logistic_regression_model):
         self.logistic_regression_model = logistic_regression_model
 
     def get_sum_of_squared_errors_without_multiprocessing(self, training_examples, weight_index):
         return sum([self.get_squared_error(training_example.response,
-                                           self.logistic_regression_model.get_output_probability(training_example.challenge),
+                                           self.logistic_regression_model.get_output_probability(
+                                               training_example.challenge),
                                            training_example.challenge[weight_index])
                     for training_example in training_examples])
 
@@ -50,8 +53,9 @@ class LogisticRegressionCostFunction:
     def minus_one_over_length_of_training_examples(self, training_examples):
         return -(1 / len(training_examples))
 
+
 class RPROP:
-    def __init__(self, epoch = 300, default_step_size = 0.1, error_tolerance_threshold = 5.0):
+    def __init__(self, epoch=300, default_step_size=0.1, error_tolerance_threshold=5.0):
         self.min_step_size = 1 * exp(-6)
         self.max_step_size = 50
         self.default_step_size = default_step_size
@@ -60,7 +64,8 @@ class RPROP:
         self.epoch = epoch
         self.error_tolerance_threshold = error_tolerance_threshold
 
-    def train_model_irprop_minus_without_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
+    def train_model_irprop_minus_without_multiprocessing(self, model_to_train, cost_function, network_weights,
+                                                         training_set):
         step_size, weight_gradients_on_previous_iteration, weight_indexes = self.get_initial_variables(network_weights)
         for iteration in range(self.epoch):
             print("Starting epoch", iteration)
@@ -73,12 +78,13 @@ class RPROP:
 
                 step_size[weight_index] = self.get_new_step_size(gradient_product, step_size[weight_index])
 
-                gradient_on_current_iteration = self.get_new_gradient_with_gradient_product(gradient_on_current_iteration,
-                                                                                                   gradient_product)
+                gradient_on_current_iteration = self.get_new_gradient_with_gradient_product(
+                    gradient_on_current_iteration,
+                    gradient_product)
 
                 network_weights[weight_index] = self.update_weight_with_step_size(network_weights[weight_index],
-                                                                    gradient_on_current_iteration,
-                                                                    step_size[weight_index])
+                                                                                  gradient_on_current_iteration,
+                                                                                  step_size[weight_index])
 
                 weight_gradients_on_previous_iteration[weight_index] = gradient_on_current_iteration
             print(network_weights, "\n")
@@ -90,7 +96,8 @@ class RPROP:
         weight_indexes = list(range(len(network_weights)))
         return step_size, weight_gradients_on_previous_iteration, weight_indexes
 
-    def train_model_irprop_minus_with_multiprocessing(self, model_to_train, cost_function, network_weights, training_set):
+    def train_model_irprop_minus_with_multiprocessing(self, model_to_train, cost_function, network_weights,
+                                                      training_set):
         step_size, weight_gradients_on_previous_iteration, weight_indexes = self.get_initial_variables(network_weights)
         pool = Pool()
 
@@ -105,12 +112,13 @@ class RPROP:
 
                 step_size[weight_index] = self.get_new_step_size(gradient_product, step_size[weight_index])
 
-                gradient_on_current_iteration = self.get_new_gradient_with_gradient_product(weight_gradient_on_current_iteration,
-                                                                                                   gradient_product)
+                gradient_on_current_iteration = self.get_new_gradient_with_gradient_product(
+                    weight_gradient_on_current_iteration,
+                    gradient_product)
 
                 network_weights[weight_index] = self.update_weight_with_step_size(network_weights[weight_index],
-                                                                    gradient_on_current_iteration,
-                                                                    step_size[weight_index])
+                                                                                  gradient_on_current_iteration,
+                                                                                  step_size[weight_index])
 
                 weight_gradients_on_previous_iteration[weight_index] = gradient_on_current_iteration
             print(network_weights, "\n")
@@ -122,12 +130,12 @@ class RPROP:
         return 0 if gradient_product < 0 else current_weight_gradient
 
     def get_new_step_size(self, gradient_product, current_step_size):
-            if gradient_product > 0:
-                return self.get_increased_step_size(current_step_size)
-            elif gradient_product < 0:
-                return self.get_decreased_step_size(current_step_size)
-            else:
-                return current_step_size
+        if gradient_product > 0:
+            return self.get_increased_step_size(current_step_size)
+        elif gradient_product < 0:
+            return self.get_decreased_step_size(current_step_size)
+        else:
+            return current_step_size
 
     def get_increased_step_size(self, current_step_size):
         return min(current_step_size * self.step_size_increase_factor, self.max_step_size)
